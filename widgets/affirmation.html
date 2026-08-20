@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gentle Reminder</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #F8F0E4; }
+  body { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+         font-family: "Segoe UI", system-ui, sans-serif; padding: 0 18px; box-sizing: border-box; }
+  #line { color: #223049; font-size: clamp(15px, 5vh, 22px); font-weight: 600; text-align: center; line-height: 1.45; }
+  #tag { color: #223049; opacity: 0.55; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; }
+  #wave { width: 46px; height: 8px; }
+</style>
+</head>
+<body>
+<div id="tag">today's gentle reminder</div>
+<div id="line"></div>
+<svg id="wave" viewBox="0 0 46 8"><path d="M1 4 Q6.5 0 12 4 T23 4 T34 4 T45 4" fill="none" stroke="#80C0DC" stroke-width="2.5" stroke-linecap="round"/></svg>
+<script>
+  var bg = new URLSearchParams(location.search).get('bg');
+  if (bg === 'dark') bg = '#191919';
+  else if (bg && bg !== 'transparent' && /^[0-9a-fA-F]{6}$/.test(bg)) bg = '#' + bg;
+  if (bg) document.documentElement.style.background = document.body.style.background = bg;
+  var lines = [
+    "Three things is a whole day's work.",
+    "Done badly still beats not done.",
+    "You don't owe anyone a perfect morning.",
+    "The messy brain dump is doing its job.",
+    "Low battery days still count.",
+    "You can start at 2pm. Starting is starting.",
+    "Half a task is not zero tasks.",
+    "Rest is part of the system, not a failure of it.",
+    "Your done pile is longer than you think.",
+    "Nobody is grading today.",
+    "Small steps are still steps.",
+    "The streak you never started can't break.",
+    "Future you only needs three things from today.",
+    "It's fine to pick the easy one first.",
+    "A slow day is not a lost day."
+  ];
+  var day = Math.floor(Date.now() / 86400000);
+  document.getElementById('line').textContent = lines[day % lines.length];
+</script>
+</body>
+</html>

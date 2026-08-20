@@ -1,0 +1,80 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>I Did a Thing</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #F8F0E4; overflow: hidden; }
+  body { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+         font-family: "Segoe UI", system-ui, sans-serif; }
+  button { border: 3px solid #223049; background: #F8A664; color: #223049; font-weight: 800;
+           border-radius: 999px; padding: 14px 26px; font-size: clamp(16px, 4.5vh, 22px);
+           cursor: pointer; font-family: inherit; box-shadow: 0 4px 0 #223049; }
+  button:active { transform: translateY(3px); box-shadow: 0 1px 0 #223049; }
+  #msg { color: #223049; font-size: clamp(13px, 3.5vh, 16px); text-align: center; padding: 0 12px; min-height: 1.4em; }
+  #count { color: #223049; opacity: 0.6; font-size: 13px; }
+  canvas { position: fixed; inset: 0; pointer-events: none; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<button id="btn">I did a thing</button>
+<div id="msg">Big or small, it counts.</div>
+<div id="count"></div>
+<script>
+  var bg = new URLSearchParams(location.search).get('bg');
+  if (bg === 'dark') bg = '#191919';
+  else if (bg && bg !== 'transparent' && /^[0-9a-fA-F]{6}$/.test(bg)) bg = '#' + bg;
+  if (bg) document.documentElement.style.background = document.body.style.background = bg;
+
+  var lines = [
+    "That's one more than zero. Nice.",
+    "Look at you, doing things.",
+    "The done pile grew today.",
+    "Tiny win logged. It all adds up.",
+    "Three of these and you've won the day.",
+    "Your brain said no and you did it anyway.",
+    "Proof you do things, right there.",
+    "Momentum looks good on you.",
+    "That counts. Yes, even that.",
+    "One pebble on the stack."
+  ];
+  var canvas = document.getElementById('c'), ctx = canvas.getContext('2d'), bits = [];
+  function size() { canvas.width = innerWidth; canvas.height = innerHeight; }
+  size(); addEventListener('resize', size);
+  var colors = ['#F8A664', '#80C0DC', '#FDE4CE', '#D9EDF6', '#223049'];
+  function burst() {
+    for (var i = 0; i < 60; i++) bits.push({
+      x: innerWidth / 2, y: innerHeight / 2.6,
+      vx: (Math.random() - 0.5) * 11, vy: -Math.random() * 9 - 2,
+      r: Math.random() * 5 + 2, c: colors[i % colors.length], a: 1
+    });
+  }
+  (function tick() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    bits = bits.filter(function (b) { return b.a > 0.02 && b.y < innerHeight + 20; });
+    bits.forEach(function (b) {
+      b.x += b.vx; b.y += b.vy; b.vy += 0.35; b.a *= 0.985;
+      ctx.globalAlpha = b.a; ctx.fillStyle = b.c;
+      ctx.fillRect(b.x, b.y, b.r, b.r);
+    });
+    ctx.globalAlpha = 1;
+    requestAnimationFrame(tick);
+  })();
+
+  var today = new Date().toDateString();
+  var store = {};
+  try { store = JSON.parse(localStorage.didathing || '{}'); } catch (e) {}
+  if (store.day !== today) store = { day: today, n: 0 };
+  var countEl = document.getElementById('count');
+  function label() { countEl.textContent = store.n ? store.n + ' thing' + (store.n > 1 ? 's' : '') + ' today' : ''; }
+  document.getElementById('btn').onclick = function () {
+    store.n++; try { localStorage.didathing = JSON.stringify(store); } catch (e) {}
+    document.getElementById('msg').textContent = lines[Math.floor(Math.random() * lines.length)];
+    burst(); label();
+  };
+  label();
+</script>
+</body>
+</html>

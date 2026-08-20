@@ -1,0 +1,102 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mudkid Focus Timer</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #F8F0E4; }
+  body { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+         font-family: "Segoe UI", system-ui, sans-serif; }
+  svg { width: min(70vw, 58vh); height: min(70vw, 58vh); cursor: pointer; }
+  #time { font-size: clamp(18px, 6vh, 30px); font-weight: 700; color: #223049; letter-spacing: 1px; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  button { border: 2px solid #223049; background: #FDE4CE; color: #223049; font-weight: 700;
+           border-radius: 999px; padding: 6px 14px; font-size: 14px; cursor: pointer; font-family: inherit; }
+  button.primary { background: #F8A664; }
+  button:active { transform: scale(0.95); }
+</style>
+</head>
+<body>
+<svg viewBox="0 0 200 200" id="face" aria-label="visual countdown timer">
+  <circle cx="100" cy="100" r="92" fill="#FFFDF9" stroke="#80C0DC" stroke-width="10"/>
+  <path id="wedge" fill="#F8A664" stroke="#223049" stroke-width="2" stroke-linejoin="round"/>
+  <circle cx="100" cy="100" r="84" fill="none" stroke="#223049" stroke-width="2.5"/>
+  <g id="ticks" stroke="#223049" stroke-linecap="round"></g>
+  <circle cx="100" cy="100" r="6" fill="#223049"/>
+</svg>
+<div id="time">15:00</div>
+<div class="row">
+  <button data-min="5">5</button><button data-min="10">10</button><button data-min="15">15</button>
+  <button data-min="25">25</button><button data-min="45">45</button>
+</div>
+<div class="row">
+  <button id="startpause" class="primary">Start</button>
+  <button id="reset">Reset</button>
+</div>
+<script>
+  var ticks = document.getElementById('ticks');
+  for (var i = 0; i < 12; i++) {
+    var a = i * Math.PI / 6, major = i % 3 === 0, r1 = major ? 70 : 75, r2 = 80;
+    var t = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    t.setAttribute('x1', 100 + r1 * Math.sin(a)); t.setAttribute('y1', 100 - r1 * Math.cos(a));
+    t.setAttribute('x2', 100 + r2 * Math.sin(a)); t.setAttribute('y2', 100 - r2 * Math.cos(a));
+    t.setAttribute('stroke-width', major ? 4 : 2);
+    ticks.appendChild(t);
+  }
+  var bg = new URLSearchParams(location.search).get('bg');
+  if (bg === 'dark') bg = '#191919';
+  else if (bg && bg !== 'transparent' && /^[0-9a-fA-F]{6}$/.test(bg)) bg = '#' + bg;
+  if (bg) document.documentElement.style.background = document.body.style.background = bg;
+
+  var totalMs = 15 * 60000, leftMs = totalMs, running = false, lastTick = 0;
+  var wedge = document.getElementById('wedge'), timeEl = document.getElementById('time'),
+      sp = document.getElementById('startpause');
+
+  function draw() {
+    var frac = Math.max(0, leftMs / totalMs);
+    var m = Math.floor(leftMs / 60000), s = Math.floor(leftMs % 60000 / 1000);
+    timeEl.textContent = m + ':' + (s < 10 ? '0' : '') + s;
+    if (frac <= 0) { wedge.setAttribute('d', ''); return; }
+    var a = frac * 2 * Math.PI, r = 82;
+    var x = 100 + r * Math.sin(a), y = 100 - r * Math.cos(a);
+    wedge.setAttribute('d', frac >= 0.9999
+      ? 'M100,18 A82,82 0 1,1 99.99,18 Z'
+      : 'M100,100 L100,18 A82,82 0 ' + (a > Math.PI ? 1 : 0) + ',1 ' + x + ',' + y + ' Z');
+  }
+  function beep() {
+    try {
+      var ctx = new (window.AudioContext || window.webkitAudioContext)();
+      var o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.frequency.value = 660; g.gain.setValueAtTime(0.15, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.9);
+      o.start(); o.stop(ctx.currentTime + 0.9);
+    } catch (e) {}
+  }
+  function loop(ts) {
+    if (!running) return;
+    if (lastTick) leftMs -= ts - lastTick;
+    lastTick = ts;
+    if (leftMs <= 0) { leftMs = 0; running = false; sp.textContent = 'Start'; beep(); }
+    draw();
+    if (running) requestAnimationFrame(loop);
+  }
+  sp.onclick = function () {
+    running = !running; lastTick = 0;
+    if (running && leftMs <= 0) leftMs = totalMs;
+    sp.textContent = running ? 'Pause' : 'Start';
+    if (running) requestAnimationFrame(loop);
+  };
+  document.getElementById('reset').onclick = function () {
+    running = false; leftMs = totalMs; sp.textContent = 'Start'; draw();
+  };
+  document.querySelectorAll('[data-min]').forEach(function (b) {
+    b.onclick = function () {
+      totalMs = leftMs = +b.dataset.min * 60000; running = false; sp.textContent = 'Start'; draw();
+    };
+  });
+  draw();
+</script>
+</body>
+</html>
