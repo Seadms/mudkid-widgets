@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mudkid Clock</title>
 <style>
-  html, body { margin: 0; height: 100%; background: transparent; }
-  /* Notion's embed iframe paints white when transparency isn't honored;
-     match Notion's dark canvas so the clock never sits in a white box */
-  @media (prefers-color-scheme: dark) { html, body { background: #191919; } }
+  /* Iframes get an opaque forced canvas when their color scheme differs from
+     the embedding page's, so "blend with Notion" can't be detected from inside.
+     Default to an intentional cream card; override with ?bg=dark|transparent|<hex>. */
+  html, body { margin: 0; height: 100%; background: #F8F0E4; }
   body { display: flex; align-items: center; justify-content: center; }
   svg { width: min(92vw, 92vh); height: min(92vw, 92vh); }
 </style>
@@ -33,6 +33,10 @@
   <circle cx="106" cy="93" r="2.2" fill="#223049"/>
 </svg>
 <script>
+  var bg = new URLSearchParams(location.search).get('bg');
+  if (bg === 'dark') bg = '#191919';
+  else if (bg && bg !== 'transparent' && /^[0-9a-fA-F]{6}$/.test(bg)) bg = '#' + bg;
+  if (bg) document.documentElement.style.background = document.body.style.background = bg;
   var ticks = document.getElementById('ticks');
   for (var i = 0; i < 12; i++) {
     var a = i * Math.PI / 6, major = i % 3 === 0;
