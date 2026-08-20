@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mudkid Clock</title>
+<style>
+  html, body { margin: 0; height: 100%; background: transparent; }
+  body { display: flex; align-items: center; justify-content: center; }
+  svg { width: min(92vw, 92vh); height: min(92vw, 92vh); }
+</style>
+</head>
+<body>
+<svg viewBox="0 0 200 200" aria-label="analog clock">
+  <!-- face -->
+  <circle cx="100" cy="100" r="92" fill="#F8F0E4" stroke="#80C0DC" stroke-width="10"/>
+  <circle cx="100" cy="100" r="84" fill="none" stroke="#223049" stroke-width="2.5"/>
+  <!-- ticks -->
+  <g id="ticks" stroke="#223049" stroke-linecap="round"></g>
+  <!-- 12 o'clock accent -->
+  <circle cx="100" cy="26" r="4" fill="#F8A664" stroke="#223049" stroke-width="1.5"/>
+  <!-- hands -->
+  <line id="hour"   x1="100" y1="100" x2="100" y2="58" stroke="#223049" stroke-width="7" stroke-linecap="round"/>
+  <line id="minute" x1="100" y1="100" x2="100" y2="40" stroke="#223049" stroke-width="4.5" stroke-linecap="round"/>
+  <line id="second" x1="100" y1="112" x2="100" y2="34" stroke="#F8A664" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- center: little paw -->
+  <circle cx="100" cy="100" r="7" fill="#F8A664" stroke="#223049" stroke-width="2"/>
+  <circle cx="94" cy="93" r="2.2" fill="#223049"/>
+  <circle cx="100" cy="91" r="2.2" fill="#223049"/>
+  <circle cx="106" cy="93" r="2.2" fill="#223049"/>
+</svg>
+<script>
+  var ticks = document.getElementById('ticks');
+  for (var i = 0; i < 12; i++) {
+    var a = i * Math.PI / 6, major = i % 3 === 0;
+    var r1 = major ? 70 : 75, r2 = 80;
+    var t = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    t.setAttribute('x1', 100 + r1 * Math.sin(a)); t.setAttribute('y1', 100 - r1 * Math.cos(a));
+    t.setAttribute('x2', 100 + r2 * Math.sin(a)); t.setAttribute('y2', 100 - r2 * Math.cos(a));
+    t.setAttribute('stroke-width', major ? 4 : 2);
+    ticks.appendChild(t);
+  }
+  var hour = document.getElementById('hour'), minute = document.getElementById('minute'), second = document.getElementById('second');
+  function rot(el, deg) { el.setAttribute('transform', 'rotate(' + deg + ' 100 100)'); }
+  function tick() {
+    var n = new Date(), ms = n.getMilliseconds(), s = n.getSeconds() + ms / 1000;
+    var m = n.getMinutes() + s / 60, h = (n.getHours() % 12) + m / 60;
+    rot(second, s * 6); rot(minute, m * 6); rot(hour, h * 30);
+    requestAnimationFrame(tick);
+  }
+  tick();
+</script>
+</body>
+</html>
